@@ -1,22 +1,21 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import { apiHelper } from "../../helperFunctions/apiHelper";
 import getToken from "../../helperFunctions/getToken";
 
 export const actionFetchUserData = createAsyncThunk(
   "user/actionFetchUserData",
   async () => {
-    const response = await fetch(
+    const headers = {
+      token: getToken(),
+    };
+    const response = await apiHelper(
       `${process.env.REACT_APP_LOCAL}/user/fetchUserData`,
-      {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-          token: getToken(),
-        },
-      }
+      "GET",
+      null,
+      headers
     );
-    const responseData = await response.json();
-    if (responseData.success === true) {
-      return responseData.user;
+    if (response.success === true) {
+      return response.user;
     }
   }
 );
@@ -25,18 +24,11 @@ export const actionSignupUser = createAsyncThunk(
   "user/actionSignupUser",
   async ({ formData, navigate }, { rejectWithValue }) => {
     try {
-      const response = await fetch(
-        `${process.env.REACT_APP_LOCAL}/user/signup`,
-        {
-          method: "POST",
-          body: formData,
-        }
-      );
-      const responseData = await response.json();
-      if (responseData.success === true) {
+      const response = await apiHelper(`/user/signup`, "POST", formData);
+      if (response.success === true) {
         navigate("/signin");
       } else {
-        alert("enter correct credentials");
+        alert("Enter correct credentials");
       }
     } catch (error) {
       return rejectWithValue(error.message);
@@ -47,28 +39,26 @@ export const actionSignupUser = createAsyncThunk(
 export const actionSigninUser = createAsyncThunk(
   "user/actionSigninUser",
   async ({ userCredentials, navigate }, { rejectWithValue }) => {
-    const response = await fetch(`${process.env.REACT_APP_LOCAL}/user/signin`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        email: userCredentials.email,
-        password: userCredentials.password,
-      }),
-    });
-    const responseData = await response.json();
-    if (responseData.success === true) {
+    const headers = {
+      "Content-Type": "application/json",
+    };
+    const response = await apiHelper(
+      `/user/signin`,
+      "POST",
+      userCredentials,
+      headers
+    );
+    if (response.success === true) {
       navigate("/");
-      localStorage.setItem("token", responseData.authJwtToken);
+      localStorage.setItem("token", response.authJwtToken);
       const expiryTime = new Date().getTime() + 2 * 60 * 60 * 1000; // 2 hours from now
       localStorage.setItem("tokenExpiry", expiryTime);
-      // here
     } else {
-      alert("enter correct credentials");
+      alert("Enter correct credentials");
     }
   }
 );
+
 const userSlice = createSlice({
   name: "user",
   initialState: {
@@ -82,4 +72,5 @@ const userSlice = createSlice({
     });
   },
 });
+
 export default userSlice.reducer;

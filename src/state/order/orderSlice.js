@@ -1,6 +1,7 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { clearCart, toggleCart } from "../userCart/cartSlice";
 import getToken from "../../helperFunctions/getToken";
+import { apiHelper } from "../../helperFunctions/apiHelper";
 
 export const actionCheckoutSession = createAsyncThunk(
   "order/actionCheckoutSession",
@@ -9,31 +10,24 @@ export const actionCheckoutSession = createAsyncThunk(
     { rejectWithValue }
   ) => {
     try {
-      const response = await fetch(
-        `${process.env.REACT_APP_LOCAL}/order/createCheckoutSession`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-            token: getToken(),
-          },
-          body: JSON.stringify({
-            cartItems,
-            currency,
-            paymentMethodId,
-          }),
-        }
+      const body = { cartItems, currency, paymentMethodId };
+      const headers = {
+        "Content-Type": "application/json",
+        token: getToken(),
+      };
+      const response = await apiHelper(
+        "/order/createCheckoutSession",
+        "POST",
+        body,
+        headers
       );
-      if (!response.ok) {
-        throw new Error("Failed to create checkout session");
-      }
-      const responseData = await response.json();
-      if (responseData.success === true) {
+
+      if (response.success === true) {
         alert("payment successful");
         navigate("/orderSummary");
         dispatch(clearCart());
         dispatch(toggleCart());
-        return responseData.order;
+        return response.order;
       }
     } catch (error) {
       console.error("Error in actionCheckoutSession:", error);
