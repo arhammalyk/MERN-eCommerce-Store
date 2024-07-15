@@ -1,29 +1,23 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import { apiHelper } from "../../helperFunctions/apiHelper";
+
 export const actionFetchAllProducts = createAsyncThunk(
   "product/actionFetchAllProducts",
   async () => {
-    const response = await fetch(
-      `${process.env.REACT_APP_LOCAL}/product/fetchAllProducts`,
-      {
-        method: "GET",
-      }
-    );
-    const responseData = await response.json();
-    return responseData;
+    const response = await apiHelper("/product/fetchAllProducts", "GET");
+    return response;
   }
 );
 
 export const actionFetchProductDetails = createAsyncThunk(
   "product/actionFetchProductDetails",
   async (productId) => {
-    const response = await fetch(
-      `${process.env.REACT_APP_LOCAL}/product/fetchProductDetails/${productId}`,
-      {
-        method: "GET",
-      }
+    const response = await apiHelper(
+      `/product/fetchProductDetails/${productId}`,
+      "GET"
     );
-    const responseData = await response.json();
-    return responseData;
+
+    return response;
   }
 );
 
